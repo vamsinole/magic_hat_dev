@@ -46,7 +46,6 @@ import {
   MAGIC_HAT_CREATOR,
   TOKEN_METADATA_PROGRAM_ID,
   MAGIC_HAT_CREATOR_KEYPAIR,
-  WHITELIST_WALLETS,
   GOG_TIME,
   WL_TIME,
   PUBLIC_TIME,
@@ -68,7 +67,7 @@ import 'react-circular-progressbar/dist/styles.css';
 import { sendTransactions } from "./connection";
 
 const MAGIC_HAT_PROGRAM_V2_ID = new anchor.web3.PublicKey(
-  "JBw14YzhNTQGqUX54MatDgxDrCPopKf4EGcJHoHfq5ha"
+  "AGydXrbh2V9RH3h3cDzpws51tRDs2HbTtUXnCkq58bwH"
 );
 
 const responsive = {
@@ -1172,85 +1171,6 @@ const Home = (props: HomeProps) => {
     }
   };
 
-  const createWhitelistAccountMultiple = async () => {
-    const walletProgram = await getProgram();
-    try {
-      if (window.localStorage.getItem('created')) {
-        if (createdWlCounts == 0) {
-          if (parseInt(window.localStorage.getItem('created')!) > 0) {
-            setCreatedWlCounts(parseInt(window.localStorage.getItem('created')!));
-          }
-        }
-      }
-      const whitelist_instructions:any = [];
-      const signers:any = anchor.web3.Keypair.fromSecretKey(MAGIC_HAT_CREATOR_KEYPAIR);
-      if (createdWlCounts < WHITELIST_WALLETS.length) {
-        for (let index = createdWlCounts; index < createdWlCounts + 10; index++) {
-          const element = WHITELIST_WALLETS[index];
-          if (element && new PublicKey(element.wallet_address)) {
-          const whitelisting_address = new PublicKey(element.wallet_address);
-          const [wallet_pda, wallet_bump] = await PublicKey.findProgramAddress(
-            [
-              Buffer.from(pdaSeed),
-              whitelisting_address.toBuffer(),
-              signers.publicKey!.toBuffer(),
-            ],
-            MAGIC_HAT_PROGRAM_V2_ID
-          );
-          const [whitelist_config_pda, bump] = await PublicKey.findProgramAddress(
-            [Buffer.from(pdaWhitelistSeed), signers.publicKey!.toBuffer()],
-            MAGIC_HAT_PROGRAM_V2_ID
-          );
-          whitelist_instructions.push(
-            await walletProgram.instruction.createWhitelistAccount(element.type,{
-                accounts: {
-                  walletWhitelist: wallet_pda,
-                  whitelistConfig: whitelist_config_pda,
-                  whitelistedAddress: whitelisting_address,
-                  magicHatCreator: signers.publicKey,
-                  systemProgram: SystemProgram.programId,
-                },
-                signers: [signers]
-              }
-            )
-          );
-          }
-        }
-        let tr = new Transaction();
-        tr.add(whitelist_instructions);
-        const wallet_creation = await sendTransactions(
-          props.connection,
-          wallet,
-          [whitelist_instructions],
-          [[signers]]
-        )
-        setCreatedWlCounts(createdWlCounts + 10);
-        window.localStorage.setItem('created',(createdWlCounts + 10).toString());
-        const whitelistAccounts: any =await walletProgram.account.walletWhitelist.all();
-        console.log(whitelistAccounts);
-        for (let index = 0; index < whitelistAccounts.length; index++) {
-          const element = whitelistAccounts[index].account;
-          console.log(element.whitelistType);
-          console.log(element.whitelistedAddress.toBase58());
-        }
-        setAlertState({
-          open: true,
-          message: "Congratulations! 10 Whitelists created",
-          severity: "success",
-        });
-      }
-      else {
-        setAlertState({
-          open: true,
-          message: "All Whitelists are already created",
-          severity: "error",
-        });
-      }
-    } catch (error) {
-      console.log("Transaction error: ", error);
-    }
-  };
-
   const createWhitelistAccount = async () => {
     const walletProgram = await getProgram();
     try {
@@ -1864,8 +1784,8 @@ const Home = (props: HomeProps) => {
           !showTeamRoom &&
           !logoAlphaLoading &&
           !isMobile && (
-            // <div onClick={setCollection} className="light-flicker-image"></div>
-            <div className="light-flicker-image"></div>
+            <div onClick={setCollection} className="light-flicker-image"></div>
+            // <div className="light-flicker-image"></div>
           )}
         {!logoLoading &&
           !showAlphaRoom &&
